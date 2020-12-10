@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path"
 	"sync"
@@ -140,6 +141,9 @@ func teeSSH(s *ssh.Session, cmd string, outB io.Writer, errB io.Writer) error {
 
 // RunCmd implements the Command Runner interface to run a exec.Cmd object
 func (s *SSHRunner) RunCmd(cmd *exec.Cmd) (*RunResult, error) {
+	fmt.Printf("executing %s\n", cmd.String())
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if cmd.Stdin != nil {
 		return nil, fmt.Errorf("SSHRunner does not support stdin - you could be the first to add it")
 	}

@@ -52,7 +52,12 @@ func (p *Profile) IsValid() bool {
 // PrimaryControlPlane gets the node specific config for the first created control plane
 func PrimaryControlPlane(cc *ClusterConfig) (Node, error) {
 	for _, n := range cc.Nodes {
-		if n.ControlPlane {
+		if n.APIEndpointServer {
+			return n, nil
+		}
+	}
+	for _, n := range cc.Nodes {
+		if n.ControlPlane { // keep n.ControlPlane for backward compatibility
 			return n, nil
 		}
 	}
@@ -64,6 +69,7 @@ func PrimaryControlPlane(cc *ClusterConfig) (Node, error) {
 		Port:              cc.KubernetesConfig.NodePort,
 		KubernetesVersion: cc.KubernetesConfig.KubernetesVersion,
 		ControlPlane:      true,
+		APIEndpointServer: true,
 		Worker:            true,
 	}
 
