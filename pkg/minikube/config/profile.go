@@ -52,7 +52,7 @@ func (p *Profile) IsValid() bool {
 // PrimaryControlPlane gets the node specific config for the first created control plane
 func PrimaryControlPlane(cc *ClusterConfig) (Node, error) {
 	for _, n := range cc.Nodes {
-		if n.APIEndpointServer {
+		if n.PrimaryControlPlane {
 			return n, nil
 		}
 	}
@@ -64,13 +64,13 @@ func PrimaryControlPlane(cc *ClusterConfig) (Node, error) {
 
 	// This config is probably from 1.6 or earlier, let's convert it.
 	cp := Node{
-		Name:              cc.KubernetesConfig.NodeName,
-		IP:                cc.KubernetesConfig.NodeIP,
-		Port:              cc.KubernetesConfig.NodePort,
-		KubernetesVersion: cc.KubernetesConfig.KubernetesVersion,
-		ControlPlane:      true,
-		APIEndpointServer: true,
-		Worker:            true,
+		Name:                cc.KubernetesConfig.NodeName,
+		IP:                  cc.KubernetesConfig.NodeIP,
+		Port:                cc.KubernetesConfig.NodePort,
+		KubernetesVersion:   cc.KubernetesConfig.KubernetesVersion,
+		ControlPlane:        true,
+		PrimaryControlPlane: true,
+		Worker:              true,
 	}
 
 	cc.Nodes = []Node{cp}
@@ -141,6 +141,20 @@ func SaveNode(cfg *ClusterConfig, node *Node) error {
 	}
 
 	return SaveProfile(viper.GetString(ProfileName), cfg)
+}
+
+func TagPrimaryControlPlane(cc *ClusterConfig) {
+	for i := range cc.Nodes {
+		if cc.Nodes[i].PrimaryControlPlane {
+			return
+		}
+	}
+	for i := range cc.Nodes {
+		if cc.Nodes[i].ControlPlane && cc.Nodes[i].Name == "" {
+			cc.Nodes[i].PrimaryControlPlane = true
+			break
+		}
+	}
 }
 
 // SaveProfile creates an profile out of the cfg and stores in $MINIKUBE_HOME/profiles/<profilename>/config.json

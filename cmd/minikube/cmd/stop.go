@@ -136,13 +136,17 @@ func stopProfile(profile string) int {
 
 	// end new code
 	api, cc := mustload.Partial(profile)
+
+	// ensure tag primary control plane properly
+	config.TagPrimaryControlPlane(cc)
+
 	defer api.Close()
 
 	primaryMachineName := ""
 	for _, n := range cc.Nodes {
 		machineName := driver.MachineName(*cc, n)
 
-		if n.APIEndpointServer {
+		if n.PrimaryControlPlane {
 			// Skip because we need to update etcd members
 			primaryMachineName = machineName
 			continue
